@@ -19,7 +19,7 @@ export class RagAppFrontStack extends cdk.Stack {
     });
     // Deploy the React app to the S3 bucket
     new BucketDeployment(this, 'DeployReactApp', {
-      sources: [Source.asset(path.join(__dirname, '..', '..', 'build'))],
+      sources: [Source.asset(path.join(__dirname, '..', 'web-resources'))],
       destinationBucket: bucket,
       retainOnDelete: false, // Ensure the files are deleted with the bucket
     });
