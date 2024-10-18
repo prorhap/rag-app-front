@@ -1,16 +1,31 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { RemovalPolicy } from 'aws-cdk-lib';
+import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
+import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import * as path from 'path';
 
 export class RagAppFrontStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'RagAppFrontQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // Create an S3 bucket to host the React app
+    const bucket = new Bucket(this, 'MyReactAppBucket', {
+      websiteIndexDocument: 'index.html',
+      publicReadAccess: true, // Allows public access for static website
+      blockPublicAccess: BlockPublicAccess.BLOCK_ACLS, // Allow public access through bucket policies
+      removalPolicy: RemovalPolicy.DESTROY, // Use RemovalPolicy.RETAIN in production
+      autoDeleteObjects: true // Remove this in production
+    });
+    // Deploy the React app to the S3 bucket
+    new BucketDeployment(this, 'DeployReactApp', {
+      sources: [Source.asset(path.join(__dirname, '..', 'web-resources'))],
+      destinationBucket: bucket,
+      retainOnDelete: false, // Ensure the files are deleted with the bucket
+    });
+    // Output the URL of the website
+    new cdk.CfnOutput(this, 'WebsiteURL', {
+      value: bucket.bucketWebsiteUrl,
+    });
   }
 }
